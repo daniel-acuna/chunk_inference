@@ -1,0 +1,458 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>demo</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-04-01"><meta name="DC.source" content="demo.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Load raw data</a></li><li><a href="#2">Preliminary visualizations</a></li><li><a href="#3">Data detrending</a></li><li><a href="#4">Response time and error matrices</a></li><li><a href="#5">Create space of chunk structures</a></li><li><a href="#6">Find which chunk structure is present at each trial</a></li><li><a href="#7">Plot results of algorithm</a></li></ul></div><h2>Load raw data<a name="1"></a></h2><pre class="codeinput">load(<span class="string">'example_data/dsp_example.mat'</span>);
+</pre><h2>Preliminary visualizations<a name="2"></a></h2><pre class="codeinput">figure(1);
+clf;
+subplot(2, 1, 1);
+plot(rt_er_data.sequence_trial, rt_er_data.movement_time, <span class="string">'.'</span>);
+hold <span class="string">on</span>;
+h = plot(rt_er_data.sequence_trial, smooth(rt_er_data.movement_time, 500), <span class="string">'r-'</span>);
+legend(h, <span class="string">'smoothed reponse time'</span>);
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Seconds'</span>);
+title(<span class="string">'Reponse time'</span>);
+subplot(2, 1, 2);
+plot(rt_er_data.sequence_trial, rt_er_data.error, <span class="string">'.'</span>);
+hold <span class="string">on</span>;
+h = plot(rt_er_data.sequence_trial, smooth(rt_er_data.error, 500), <span class="string">'r-'</span>);
+legend(h, <span class="string">'smoothed error rate'</span>);
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Error'</span>);
+title(<span class="string">'Errors'</span>);
+</pre><img vspace="5" hspace="5" src="demo_01.png" alt=""> <h2>Data detrending<a name="3"></a></h2><p>Model</p><pre class="codeinput">exponential_model = [<span class="string">'movement_time ~ a0'</span> <span class="keyword">...</span>
+    <span class="string">'+ a1*exp((b1/100)*(sequence_trial-1) + '</span> <span class="keyword">...</span>
+    <span class="string">'b2/10*(sequence_trial-1)*(sequence_press-1))'</span>];
+initial_values = [0.18 0.38 -0.17, -0.1];
+
+opts = statset(<span class="string">'Display'</span>,<span class="string">'off'</span>,<span class="string">'TolFun'</span>,1e-5, <span class="keyword">...</span>
+    <span class="string">'MaxIter'</span>, 100);
+
+<span class="comment">% Fit</span>
+nlmf = NonLinearModel.fit(rt_er_data, <span class="keyword">...</span>
+    exponential_model, initial_values, <span class="string">'Options'</span>, opts);
+
+<span class="comment">% Plot detrended response times</span>
+figure(2);
+clf;
+plot(rt_er_data.sequence_trial, nlmf.Residuals(:, <span class="string">'Raw'</span>), <span class="string">'.'</span>);
+hold <span class="string">on</span>;
+plot(rt_er_data.sequence_trial, <span class="keyword">...</span>
+    smooth(double(nlmf.Residuals(:, <span class="string">'Raw'</span>)), 500), <span class="string">'r-'</span>);
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Residual response time'</span>);
+</pre><img vspace="5" hspace="5" src="demo_02.png" alt=""> <h2>Response time and error matrices<a name="4"></a></h2><pre class="codeinput"><span class="comment">% Create a response time and error matrix of trials vs element</span>
+[rt_seq, er_seq] = mt_to_seq(rt_er_data, <span class="keyword">...</span>
+                             double(nlmf.Residuals(:, <span class="string">'Raw'</span>)), <span class="keyword">...</span>
+                             rt_er_data.error);
+
+<span class="comment">% Plot results</span>
+figure(3);
+clf;
+subplot(2, 1, 1);
+imagesc(rt_seq', [-0.25 0.25]);
+colormap(<span class="string">'cool'</span>);
+colorbar;
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Element'</span>);
+title(<span class="string">'Response times'</span>);
+subplot(2, 1, 2);
+imagesc(er_seq', [0 1]);
+colorbar;
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Element'</span>);
+title(<span class="string">'Errors'</span>);
+</pre><img vspace="5" hspace="5" src="demo_03.png" alt=""> <h2>Create space of chunk structures<a name="5"></a></h2><pre class="codeinput">chunk_structures = create_chunks_nospace(<span class="string">'n_seqlen'</span>, size(rt_seq, 2));
+figure(4);
+clf;
+<span class="comment">% Plot space of chunks</span>
+imagesc(chunk_structures');
+xlabel(<span class="string">'Chunk structure index'</span>);
+ylabel(<span class="string">'Element'</span>);
+colormap(<span class="string">'jet'</span>);
+title(<span class="string">'All possible chunk structures'</span>);
+</pre><img vspace="5" hspace="5" src="demo_04.png" alt=""> <h2>Find which chunk structure is present at each trial<a name="6"></a></h2><pre class="codeinput">[rho, self_t, log_like, fm, T, rho_er, v, v_er, <span class="keyword">...</span>
+    initial_dist, mean_pause, mean_inchunk, <span class="keyword">...</span>
+    mean_pause_er, mean_inchunk_er, <span class="keyword">...</span>
+    chunks, cor_chunks, gamma] = <span class="keyword">...</span>
+    chunk_hmm_learn_param(rt_seq, er_seq, <span class="string">'verbose'</span>, true, <span class="keyword">...</span>
+    <span class="string">'fit_rt'</span>, true, <span class="string">'fit_rt_rt'</span>, true, <span class="string">'fit_er'</span>, true, <span class="string">'fit_er_er'</span>, true, <span class="keyword">...</span>
+    <span class="string">'fit_T'</span>, true, <span class="string">'fit_rho'</span>, true, <span class="string">'fit_rho_er'</span>, true, <span class="keyword">...</span>
+    <span class="string">'chunks'</span>, chunk_structures);
+
+<span class="comment">% compute mean and covariance of each chunk structure</span>
+[chunk_means_rt, rt_cov, chunk_means_er, er_cov] = <span class="keyword">...</span>
+    create_chunk_means_covs(chunks, cor_chunks, <span class="keyword">...</span>
+        mean_pause, mean_inchunk, v, rho, <span class="keyword">...</span>
+        mean_pause_er, mean_inchunk_er, v_er, rho_er);
+</pre><pre class="codeoutput">Iteration: 1 (elapsed time: 1.1 s)
+	 rho             = 0.100000
+	 rho_er          = 0.100000
+	 self_t          = 0.600000
+	 v               = 0.013430
+	 v_er            = 0.025124
+	 mean_pause      = 0.100000
+	 mean_inchunk    = 0.000000
+	 mean_pause_er   = 0.100000
+	 mean_inchunk_er = 0.000000
+	 log_like        = 20300.059521
+Iteration: 2 (elapsed time: 3.0 s)
+	 rho             = 0.082806
+	 rho_er          = 0.078637
+	 self_t          = 0.579500
+	 v               = 0.010720
+	 v_er            = 0.024500
+	 mean_pause      = 0.084059
+	 mean_inchunk    = -0.032792
+	 mean_pause_er   = 0.066521
+	 mean_inchunk_er = 0.010493
+	 log_like        = 22045.155245
+Iteration: 3 (elapsed time: 4.8 s)
+	 rho             = 0.099987
+	 rho_er          = 0.102163
+	 self_t          = 0.719305
+	 v               = 0.010209
+	 v_er            = 0.024868
+	 mean_pause      = 0.081127
+	 mean_inchunk    = -0.040155
+	 mean_pause_er   = 0.048858
+	 mean_inchunk_er = 0.014744
+	 log_like        = 22284.144701
+Iteration: 4 (elapsed time: 6.7 s)
+	 rho             = 0.108398
+	 rho_er          = 0.117858
+	 self_t          = 0.761575
+	 v               = 0.010084
+	 v_er            = 0.024934
+	 mean_pause      = 0.080362
+	 mean_inchunk    = -0.042068
+	 mean_pause_er   = 0.045074
+	 mean_inchunk_er = 0.016015
+	 log_like        = 22391.426335
+Iteration: 5 (elapsed time: 8.5 s)
+	 rho             = 0.109954
+	 rho_er          = 0.122651
+	 self_t          = 0.780786
+	 v               = 0.009988
+	 v_er            = 0.024934
+	 mean_pause      = 0.080973
+	 mean_inchunk    = -0.042938
+	 mean_pause_er   = 0.044961
+	 mean_inchunk_er = 0.015940
+	 log_like        = 22451.881663
+Iteration: 6 (elapsed time: 10.4 s)
+	 rho             = 0.110961
+	 rho_er          = 0.125102
+	 self_t          = 0.785429
+	 v               = 0.009927
+	 v_er            = 0.024933
+	 mean_pause      = 0.081434
+	 mean_inchunk    = -0.043442
+	 mean_pause_er   = 0.044948
+	 mean_inchunk_er = 0.015885
+	 log_like        = 22487.824352
+Iteration: 7 (elapsed time: 12.2 s)
+	 rho             = 0.111733
+	 rho_er          = 0.128155
+	 self_t          = 0.789902
+	 v               = 0.009900
+	 v_er            = 0.024939
+	 mean_pause      = 0.081568
+	 mean_inchunk    = -0.043693
+	 mean_pause_er   = 0.044615
+	 mean_inchunk_er = 0.016016
+	 log_like        = 22503.468665
+Iteration: 8 (elapsed time: 14.1 s)
+	 rho             = 0.112291
+	 rho_er          = 0.129171
+	 self_t          = 0.792985
+	 v               = 0.009885
+	 v_er            = 0.024941
+	 mean_pause      = 0.081616
+	 mean_inchunk    = -0.043851
+	 mean_pause_er   = 0.044458
+	 mean_inchunk_er = 0.016067
+	 log_like        = 22512.644389
+Iteration: 9 (elapsed time: 15.9 s)
+	 rho             = 0.113975
+	 rho_er          = 0.128973
+	 self_t          = 0.796204
+	 v               = 0.009870
+	 v_er            = 0.024941
+	 mean_pause      = 0.081663
+	 mean_inchunk    = -0.044013
+	 mean_pause_er   = 0.044454
+	 mean_inchunk_er = 0.016038
+	 log_like        = 22521.037928
+Iteration: 10 (elapsed time: 17.8 s)
+	 rho             = 0.114810
+	 rho_er          = 0.128669
+	 self_t          = 0.798982
+	 v               = 0.009862
+	 v_er            = 0.024941
+	 mean_pause      = 0.081673
+	 mean_inchunk    = -0.044106
+	 mean_pause_er   = 0.044407
+	 mean_inchunk_er = 0.016043
+	 log_like        = 22529.245143
+Iteration: 11 (elapsed time: 19.6 s)
+	 rho             = 0.114241
+	 rho_er          = 0.126559
+	 self_t          = 0.798344
+	 v               = 0.009851
+	 v_er            = 0.024938
+	 mean_pause      = 0.081716
+	 mean_inchunk    = -0.044207
+	 mean_pause_er   = 0.044554
+	 mean_inchunk_er = 0.015948
+	 log_like        = 22527.280742
+</pre><h2>Plot results of algorithm<a name="7"></a></h2><pre class="codeinput"><span class="comment">% Expected chunking structure</span>
+figure(5);
+clf;
+subplot(2, 1, 1);
+imagesc((gamma * chunks)');
+colormap(<span class="string">'jet'</span>);
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Element'</span>);
+title(<span class="string">'Expected chunking structure'</span>);
+subplot(2, 1, 2);
+
+n_chunks = apply(@(x)(length(unique(x))), chunks);
+
+<span class="comment">% Expected number of chunk per trial (with some smoothing)</span>
+plot(smooth(gamma * n_chunks, 100), <span class="string">'-'</span>)
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Number of chunks'</span>);
+title(<span class="string">'Expected number of chunks per trial'</span>);
+axis <span class="string">tight</span>;
+
+<span class="comment">% Meean response times and errors fitted by model</span>
+expected_rt = gamma * chunk_means_rt;
+expected_er = gamma * chunk_means_er;
+figure(6);
+clf;
+subplot(2, 1, 1);
+imagesc(expected_rt', [-0.25 0.25]);
+colormap(<span class="string">'cool'</span>);
+colorbar;
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Element'</span>);
+title(<span class="string">'Expected response times'</span>);
+subplot(2, 1, 2);
+imagesc(expected_rt', [0 0.2]);
+colorbar;
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Element'</span>);
+title(<span class="string">'Expected error rate'</span>);
+</pre><img vspace="5" hspace="5" src="demo_05.png" alt=""> <img vspace="5" hspace="5" src="demo_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Load raw data
+load('example_data/dsp_example.mat');
+
+%% Preliminary visualizations
+figure(1);
+clf;
+subplot(2, 1, 1);
+plot(rt_er_data.sequence_trial, rt_er_data.movement_time, '.');
+hold on;
+h = plot(rt_er_data.sequence_trial, smooth(rt_er_data.movement_time, 500), 'r-');
+legend(h, 'smoothed reponse time');
+xlabel('Trial');
+ylabel('Seconds');
+title('Reponse time');
+subplot(2, 1, 2);
+plot(rt_er_data.sequence_trial, rt_er_data.error, '.');
+hold on;
+h = plot(rt_er_data.sequence_trial, smooth(rt_er_data.error, 500), 'r-');
+legend(h, 'smoothed error rate');
+xlabel('Trial');
+ylabel('Error');
+title('Errors');
+
+%% Data detrending
+% Model
+exponential_model = ['movement_time ~ a0' ...
+    '+ a1*exp((b1/100)*(sequence_trial-1) + ' ...
+    'b2/10*(sequence_trial-1)*(sequence_press-1))'];
+initial_values = [0.18 0.38 -0.17, -0.1];
+
+opts = statset('Display','off','TolFun',1e-5, ...
+    'MaxIter', 100);
+
+% Fit
+nlmf = NonLinearModel.fit(rt_er_data, ...
+    exponential_model, initial_values, 'Options', opts);
+
+% Plot detrended response times
+figure(2);
+clf;
+plot(rt_er_data.sequence_trial, nlmf.Residuals(:, 'Raw'), '.');
+hold on;
+plot(rt_er_data.sequence_trial, ...
+    smooth(double(nlmf.Residuals(:, 'Raw')), 500), 'r-');
+xlabel('Trial');
+ylabel('Residual response time');
+                         
+%% Response time and error matrices
+
+% Create a response time and error matrix of trials vs element 
+[rt_seq, er_seq] = mt_to_seq(rt_er_data, ...
+                             double(nlmf.Residuals(:, 'Raw')), ...
+                             rt_er_data.error);
+
+% Plot results                        
+figure(3);
+clf;
+subplot(2, 1, 1);
+imagesc(rt_seq', [-0.25 0.25]);
+colormap('cool');
+colorbar;
+xlabel('Trial');
+ylabel('Element');
+title('Response times');
+subplot(2, 1, 2);
+imagesc(er_seq', [0 1]);
+colorbar;
+xlabel('Trial');
+ylabel('Element');
+title('Errors');
+
+%% Create space of chunk structures
+chunk_structures = create_chunks_nospace('n_seqlen', size(rt_seq, 2));
+figure(4);
+clf;
+% Plot space of chunks
+imagesc(chunk_structures');
+xlabel('Chunk structure index');
+ylabel('Element');
+colormap('jet');
+title('All possible chunk structures');
+
+%% Find which chunk structure is present at each trial
+[rho, self_t, log_like, fm, T, rho_er, v, v_er, ...
+    initial_dist, mean_pause, mean_inchunk, ...
+    mean_pause_er, mean_inchunk_er, ...
+    chunks, cor_chunks, gamma] = ...
+    chunk_hmm_learn_param(rt_seq, er_seq, 'verbose', true, ...
+    'fit_rt', true, 'fit_rt_rt', true, 'fit_er', true, 'fit_er_er', true, ...
+    'fit_T', true, 'fit_rho', true, 'fit_rho_er', true, ...
+    'chunks', chunk_structures);
+
+% compute mean and covariance of each chunk structure
+[chunk_means_rt, rt_cov, chunk_means_er, er_cov] = ...
+    create_chunk_means_covs(chunks, cor_chunks, ...
+        mean_pause, mean_inchunk, v, rho, ...
+        mean_pause_er, mean_inchunk_er, v_er, rho_er);
+
+%% Plot results of algorithm
+
+% Expected chunking structure
+figure(5);
+clf;
+subplot(2, 1, 1);
+imagesc((gamma * chunks)');
+colormap('jet');
+xlabel('Trial');
+ylabel('Element');
+title('Expected chunking structure');
+subplot(2, 1, 2);
+
+n_chunks = apply(@(x)(length(unique(x))), chunks);
+
+% Expected number of chunk per trial (with some smoothing)
+plot(smooth(gamma * n_chunks, 100), '-')
+xlabel('Trial');
+ylabel('Number of chunks');
+title('Expected number of chunks per trial');
+axis tight;
+
+% Meean response times and errors fitted by model
+expected_rt = gamma * chunk_means_rt;
+expected_er = gamma * chunk_means_er;
+figure(6);
+clf;
+subplot(2, 1, 1);
+imagesc(expected_rt', [-0.25 0.25]);
+colormap('cool');
+colorbar;
+xlabel('Trial');
+ylabel('Element');
+title('Expected response times');
+subplot(2, 1, 2);
+imagesc(expected_rt', [0 0.2]);
+colorbar;
+xlabel('Trial');
+ylabel('Element');
+title('Expected error rate');
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>
