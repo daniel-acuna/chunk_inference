@@ -1,8 +1,11 @@
+Multi-faceted aspects of chunking enable robust algorithms: implementation
+==========================================================================
+
 This package implements the method described in "Multi-faceted aspects of 
 chunking enable robust algorithms" by Daniel E. Acuna, Nicholas F. Wymbs,
 Chelsea A. Reynolds, Nathalie Picard, Robert S. Turner, Peter L. Strick,
-Scott Grafton, and Konrad Kording, under review in the Journal of
-Neurophysiology.
+Scott Grafton, and Konrad Kording, accepted in the Journal of
+Neurophysiology (http://jn.physiology.org/content/early/2014/07/23/jn.00028.2014).
 
 The algorithm was implemented by Daniel E. Acuna (daniel.acuna@northwestern.edu)
 If you have any questions, send him an email.
