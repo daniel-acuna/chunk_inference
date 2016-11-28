@@ -3,32 +3,42 @@ function [rho, self_t, log_like, fm, T, rho_er, v, v_er, ...
     mean_pause_er, mean_inchunk_er, ...
     chunks, cor_chunks, gamma] = ...
     chunk_hmm_learn_param(mt_seq, er_seq, varargin)
+% function [rho, self_t, log_like, fm, T, rho_er, v, v_er, ...
+%     initial_dist, mean_pause, mean_inchunk, ...
+%     mean_pause_er, mean_inchunk_er, ...
+%     chunks, cor_chunks, gamma] = ...
+%     chunk_hmm_learn_param(mt_seq, er_seq, varargin)
 % Finds best parameters for chunks using Baum-Welch algorithm
-% input parameters:
-%  mt_seq: reaction times n x k (n: number of trials, k: sequence length)
-%  er_seq: errors n x k
-%  rho   : initial correlation of reaction times within chunks
-%  rho_er: initial correlation of errors within chunks
-%  self_t: initial self transition probabilities
-%  model : specify whether to use movement times (mt), errors (er), or 
+% INPUT parameters:
+%    mt_seq: reaction times n x k (n: number of trials, k: sequence length)
+%    er_seq: errors n x k
+% OPTIONAL INPUT parameters 
+%    rho   : initial correlation of reaction times within chunks
+%    rho_er: initial correlation of errors within chunks
+%    self_t: initial self transition probabilities
+%    model : specify whether to use movement times (mt), errors (er), or 
 %          both (mt_er) for inferring chunking
-%  fit_pause: specify whether a pause is expected at thebeginning of a 
+%    fit_pause: specify whether a pause is expected at thebeginning of a 
 %          chunk 
-%  verbose:whether to show the fitting process
-%  mean_pause:specify the initial mean pause expected
-
-% output parameters
-% rho: best correlation parameter for reaction time
-% self_t: best self-transition parameter
-% log_like: log-likelihood on training data
-% fm: forward messages for hmm learning
-% T: transition matrix
-% rho_er : correlation parmater for errors within a chunk
-% v: variance in reaction time
-% v_er: variance in errors
-% initial_dist: initial distribution of chunks
-% mean_pause: mean reaction time pause at beginning of chunk
-
+%    verbose:whether to show the fitting process
+%    mean_pause:specify the initial mean pause expected
+% OUTPUT parameters: 
+%    rho: best correlation parameter for reaction time
+%    self_t: best self-transition parameter
+%    log_like: log-likelihood on training data
+%    fm: forward messages for hmm learning
+%    T: transition matrix
+%    rho_er : correlation parmater for errors within a chunk
+%    v: variance in reaction time
+%    v_er: variance in errors
+%    initial_dist: initial distribution of chunks
+%    mean_pause: mean reaction time pause at beginning of chunk
+%    mean_inchunk: mean reaction time within a chunk
+%    mean_pause_er: Error frequency in the beginning of a chunk 
+%    mean_inchunk_er: Error frequency in the beginning of a chunk 
+%    chunks: QxK matrix indicating chunk indetities 
+%    cor_chunks: 
+%    gamma: NxQ Posterior probability on different ways of chunking 
 % some parameters can be given
 p = inputParser;
 p.KeepUnmatched = true;
@@ -73,6 +83,7 @@ chunks = p.Results.chunks;
 
 tic;
 
+% If not considered, set the corresponding parameters to zero 
 if ~fit_rt
     mean_pause = 0;
     mean_inchunk = 0;
@@ -93,25 +104,33 @@ end
 
 log_like = nan;
 
+% Make chunking structure if missing 
 if isempty(chunks)
     chunks = create_chunks_nospace('n_seqlen', size(mt_seq, 2));
 end
 
+% Generate raw correlation matrix for each chunk structure 
 cor_chunks = to_corr_chunks(chunks);
 
-
+% Number of chunking structures 
 n_chunks = size(chunks, 1);
+
+% Set up initial guess of transition matrix 
 T = ((ones(n_chunks, n_chunks)-eye(n_chunks))*...
     (1-self_t))/(n_chunks-1) + ...
     eye(n_chunks)*self_t;
 
-not_exit = true;
-v = var(mt_seq(:));
-v_er = var(er_seq(:));
+% Initial guesses of variance parameters: Exclude missing observations 
+v    = var(mt_seq(~isnan(mt_seq)));      
+v_er = var(er_seq(~isnan(er_seq)));
 
-% initial distribution
-initial_dist = ones(1, n_chunks)/n_chunks;
+% initial guess for the intial distribution: uniform 
+initial_dist = ones(1, n_chunks)/n_chunks; 
+
+% Initialize 
 n_iteration = 0;
+not_exit = true;
+
 % alpha = 1;
 % beta = 1/(n_chunks-1);
 while not_exit    
